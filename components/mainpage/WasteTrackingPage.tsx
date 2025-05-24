@@ -41,7 +41,7 @@ export default function WasteTracking() {
   ]
 
   return (
-    <div className="p-8">
+    <div className="p-8 bg-green-50 min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

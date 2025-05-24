@@ -1,440 +1,542 @@
+
+
 "use client";
-
-import { NextPage } from 'next';
-import Head from 'next/head';
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiEdit, FiStar, FiCheck, FiTrash2, FiUser, FiMail, FiPhone, FiMapPin, FiAward } from 'react-icons/fi';
 
-// Type definitions
-interface User {
-  id: string;
+type Reward = {
+  id: number;
   name: string;
-  email: string;
-  avatar?: string;
-  joinDate: string;
-  level: string;
-}
-
-interface RecyclingStats {
-  totalItems: number;
-  plastic: number;
-  paper: number;
-  glass: number;
-  metal: number;
-  co2Saved: number;
   points: number;
-}
-
-interface Badge {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  earned: boolean;
-}
-
-interface Reward {
-  id: string;
-  title: string;
-  description: string;
-  points: number;
-  image: string;
   claimed: boolean;
-  partner?: string;
-}
+  image: string;
+  description: string;
+};
 
-const ProfileRewardPage: NextPage = () => {
-  const [activeTab, setActiveTab] = useState<'profile' | 'rewards'>('profile');
+type InventoryItem = {
+  id: number;
+  name: string;
+  dateClaimed: string;
+  image: string;
+};
 
-  // User data
-  const user: User = {
-    id: 'user-123',
-    name: 'Alex Johnson',
-    email: 'alex.johnson@example.com',
-    joinDate: 'January 2023',
-    level: 'Eco Champion',
-  };
-
-  // Recycling stats
-  const stats: RecyclingStats = {
-    totalItems: 247,
-    plastic: 112,
-    paper: 68,
-    glass: 42,
-    metal: 25,
-    co2Saved: 48.3,
-    points: 1250,
-  };
-
-  // Badges data
-  const badges: Badge[] = [
-    {
-      id: '1',
-      name: 'Recycling Rookie',
-      description: 'Recycled your first 10 items',
-      icon: '🥇',
-      earned: true,
-    },
-    {
-      id: '2',
-      name: 'Plastic Warrior',
-      description: 'Recycled 50 plastic items',
-      icon: '♻️',
-      earned: true,
-    },
-    {
-      id: '3',
-      name: 'Eco Hero',
-      description: 'Saved 20kg of CO2',
-      icon: '🌍',
-      earned: true,
-    },
-    {
-      id: '4',
-      name: 'Master Recycler',
-      description: 'Recycled 500 items total',
-      icon: '🏆',
-      earned: false,
-    },
-    {
-      id: '5',
-      name: 'Trash Terminator',
-      description: 'Recycled all material types',
-      icon: '🦸',
-      earned: false,
-    },
-  ];
+export default function ProfilePage() {
+  // User data state
+  const [user, setUser] = useState({
+    name: "Alex Johnson",
+    email: "alex.johnson@example.com",
+    phone: "+1 (234) 567-8900",
+    address: "123 Green Street, Eco City",
+    memberSince: "Jan 2023",
+    points: 1850,
+    level: "Eco Champion",
+    completedPickups: 24,
+    scheduledPickups: 3,
+    inventory: [] as InventoryItem[],
+  });
 
   // Rewards data
-  const rewards: Reward[] = [
+  const [rewards, setRewards] = useState<Reward[]>([
     {
-      id: '1',
-      title: 'Eco-Friendly Water Bottle',
-      description: 'Stainless steel water bottle with your name engraved',
-      points: 800,
-      image: '/water-bottle.jpg',
-      claimed: false,
-    },
-    {
-      id: '2',
-      title: 'Local Coffee Shop Coupon',
-      description: '$5 coupon for your next purchase at Green Beans Cafe',
+      id: 1,
+      name: "Stainless Steel Bottle",
       points: 500,
-      image: '/coffee-cup.jpg',
-      claimed: true,
-      partner: 'Green Beans Cafe',
-    },
-    {
-      id: '3',
-      title: 'Reusable Shopping Bag Set',
-      description: 'Set of 3 durable canvas shopping bags',
-      points: 600,
-      image: '/shopping-bags.jpg',
       claimed: false,
+      image: "/bottle.jpg",
+      description: "Premium insulated water bottle"
     },
     {
-      id: '4',
-      title: 'Tree Planting Certificate',
-      description: 'We\'ll plant a tree in your name with One Tree Planted',
-      points: 1000,
-      image: '/tree-planting.jpg',
+      id: 2,
+      name: "Reusable Grocery Bag",
+      points: 300,
       claimed: false,
-      partner: 'One Tree Planted',
+      image: "/bag.jpg",
+      description: "Set of 3 organic cotton bags"
     },
     {
-      id: '5',
-      title: 'Solar Charger',
-      description: 'Portable solar charger for your devices',
-      points: 1500,
-      image: '/solar-charger.jpg',
-      claimed: false,
-    },
-    {
-      id: '6',
-      title: 'Organic Cotton T-Shirt',
-      description: 'Eco-friendly t-shirt made from organic cotton',
+      id: 3,
+      name: "Solar Charger",
       points: 1200,
-      image: '/tshirt.jpg',
       claimed: false,
+      image: "/charger.jpg",
+      description: "Portable solar-powered charger"
     },
-  ];
+    {
+      id: 4,
+      name: "Bamboo Toothbrush Set",
+      points: 250,
+      claimed: false,
+      image: "/toothbrush.jpg",
+      description: "Eco-friendly bamboo toothbrushes"
+    },
+  ]);
+
+  // UI state
+  const [activeTab, setActiveTab] = useState<'profile' | 'rewards' | 'inventory'>('profile');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    address: user.address,
+  });
+
+  // Determine user badge based on points
+  const getUserBadge = () => {
+    if (user.points >= 2000) return { name: "Eco Legend", color: "from-purple-500 to-purple-600" };
+    if (user.points >= 1500) return { name: "Eco Champion", color: "from-teal-500 to-teal-600" };
+    if (user.points >= 1000) return { name: "Green Guardian", color: "from-emerald-500 to-emerald-600" };
+    if (user.points >= 500) return { name: "Eco Explorer", color: "from-blue-500 to-blue-600" };
+    return { name: "Eco Starter", color: "from-green-500 to-green-600" };
+  };
+
+  // Handle claiming a reward
+  const handleClaimReward = (rewardId: number) => {
+    const reward = rewards.find(r => r.id === rewardId);
+    if (!reward || reward.claimed || user.points < reward.points) return;
+
+    // Update reward status
+    const updatedRewards = rewards.map(r => 
+      r.id === rewardId ? { ...r, claimed: true } : r
+    );
+
+    // Deduct points and add to inventory
+    setUser(prev => ({
+      ...prev,
+      points: prev.points - reward.points,
+      inventory: [
+        ...prev.inventory,
+        {
+          id: Date.now(),
+          name: reward.name,
+          dateClaimed: new Date().toLocaleDateString(),
+          image: reward.image
+        }
+      ]
+    }));
+
+    setRewards(updatedRewards);
+  };
+
+  // Handle editing profile
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setUser(prev => ({ ...prev, ...editForm }));
+    setIsEditing(false);
+  };
+
+  // Animation variants
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+  };
+
+  const tabContentVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.3 } }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Head>
-        <title>Profile & Rewards | EcoRecycle</title>
-        <meta name="description" content="Your recycling profile and rewards" />
-      </Head>
-
-      <main className="container mx-auto px-4 py-8">
-        {/* Header with tabs */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4 md:mb-0">My Eco Account</h1>
-          
-          <div className="flex space-x-1 bg-white p-1 rounded-lg shadow-sm border border-gray-200">
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'profile' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+    <div className="p-8 bg-green-50 min-h-screen">
+      <div className="container mx-auto px-2 py-8">
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col md:flex-row justify-between items-center mb-8"
+        >
+          <h1 className="text-3xl font-bold text-gray-800 mb-4 md:mb-0">My Eco Profile</h1>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center bg-white px-4 py-2 rounded-full shadow-sm">
+              <FiStar className="text-amber-500 mr-2" />
+              <span className="font-bold text-gray-800">{user.points}</span>
+              <span className="ml-1 text-gray-600">pts</span>
+            </div>
+            <button 
+              onClick={() => setIsEditing(true)}
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors shadow-md"
             >
-              Profile
-            </button>
-            <button
-              onClick={() => setActiveTab('rewards')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'rewards' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
-            >
-              Rewards
+              <FiEdit className="mr-2" />
+              Edit Profile
             </button>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Points Banner - Always visible */}
-        <div className="bg-gradient-to-r from-green-500 to-teal-500 rounded-lg shadow-lg p-6 text-white mb-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div>
-              <h2 className="text-xl font-bold mb-1">Your Eco Points</h2>
-              <p className="opacity-90">Recycle more to earn more rewards</p>
-            </div>
-            <div className="mt-4 md:mt-0 bg-white bg-opacity-20 rounded-full px-6 py-3">
-              <p className="text-sm font-medium">Current balance</p>
-              <p className="text-2xl font-bold flex items-center">
-                <span className="mr-2">⭐</span> {stats.points.toLocaleString()} pts
-              </p>
-            </div>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Left Column - Profile Card */}
+          <div className="lg:col-span-1">
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={cardVariants}
+              className="bg-white rounded-2xl shadow-xl overflow-hidden"
+            >
+              <div className={`h-3 bg-gradient-to-r ${getUserBadge().color}`}></div>
+              <div className="p-6">
+                <div className="flex flex-col items-center">
+                  <motion.div 
+                    whileHover={{ scale: 1.05 }}
+                    className="relative w-32 h-32 mb-4 rounded-full bg-gradient-to-br from-green-100 to-cyan-100 overflow-hidden border-4 border-white shadow-md"
+                  >
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                      <FiUser className="w-16 h-16" />
+                    </div>
+                  </motion.div>
+                  
+                  <h2 className="text-2xl font-bold text-gray-800">{user.name}</h2>
+                  <p className="text-gray-500 mb-2">{user.email}</p>
+                  
+                  <motion.div 
+                    whileHover={{ scale: 1.05 }}
+                    className={`mt-2 mb-4 px-4 py-1 rounded-full text-sm font-medium text-white bg-gradient-to-r ${getUserBadge().color} shadow-md`}
+                  >
+                    {getUserBadge().name}
+                  </motion.div>
+                </div>
+                
+                <div className="border-t border-gray-100 pt-4 mt-4">
+                  <div className="flex justify-between py-2">
+                    <span className="text-gray-600 flex items-center">
+                      <FiMail className="mr-2" /> Email:
+                    </span>
+                    <span className="font-medium truncate">{user.email}</span>
+                  </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-gray-600 flex items-center">
+                      <FiPhone className="mr-2" /> Phone:
+                    </span>
+                    <span className="font-medium">{user.phone}</span>
+                  </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-gray-600 flex items-center">
+                      <FiMapPin className="mr-2" /> Address:
+                    </span>
+                    <span className="font-medium text-right">{user.address}</span>
+                  </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-gray-600">Member Since:</span>
+                    <span className="font-medium">{user.memberSince}</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Stats Cards */}
+            <motion.div 
+              initial="hidden"
+              animate="visible"
+              variants={cardVariants}
+              transition={{ delay: 0.1 }}
+              className="grid grid-cols-2 gap-4 mt-6"
+            >
+              <div className="bg-white rounded-xl shadow-md p-5">
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-500">Completed</span>
+                  <span className="text-2xl font-bold text-green-600">{user.completedPickups}</span>
+                  <span className="text-xs text-gray-500 mt-1">Pickups</span>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl shadow-md p-5">
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-500">Scheduled</span>
+                  <span className="text-2xl font-bold text-blue-600">{user.scheduledPickups}</span>
+                  <span className="text-xs text-gray-500 mt-1">Pickups</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Right Column - Main Content */}
+          <div className="lg:col-span-3">
+            {/* Tabs */}
+            <motion.div 
+              initial="hidden"
+              animate="visible"
+              variants={cardVariants}
+              className="flex space-x-1 bg-white p-1 rounded-xl shadow-sm mb-6"
+            >
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'profile' ? 'bg-green-100 text-green-700' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                Activity
+              </button>
+              <button
+                onClick={() => setActiveTab('rewards')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'rewards' ? 'bg-green-100 text-green-700' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                Rewards
+              </button>
+              <button
+                onClick={() => setActiveTab('inventory')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'inventory' ? 'bg-green-100 text-green-700' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                My Items
+              </button>
+            </motion.div>
+
+            {/* Tab Content */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                variants={tabContentVariants}
+                className="bg-white rounded-2xl shadow-xl overflow-hidden"
+              >
+                {/* Profile Tab */}
+                {activeTab === 'profile' && (
+                  <div className="p-6">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-6">Your Recycling Activity</h2>
+                    
+                    {/* Progress to next level */}
+                    <div className="mb-8">
+                      <div className="flex justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-600">Progress to {getUserBadge().name}</span>
+                        <span className="text-sm font-medium text-gray-600">{user.points}/2000 pts</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, (user.points / 2000) * 100)}%` }}
+                          transition={{ duration: 1 }}
+                          className={`h-3 rounded-full bg-gradient-to-r ${getUserBadge().color}`}
+                        ></motion.div>
+                      </div>
+                    </div>
+                    
+                    {/* Recent Activity */}
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-800 mb-4">Recent Achievements</h3>
+                      <div className="space-y-4">
+                        <motion.div 
+                          whileHover={{ scale: 1.02 }}
+                          className="flex items-center p-4 bg-green-50 rounded-lg border border-green-100"
+                        >
+                          <div className="p-3 bg-green-100 rounded-full mr-4">
+                            <FiAward className="text-green-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-800">Plastic Warrior</h4>
+                            <p className="text-sm text-gray-600">Recycled 50+ plastic items</p>
+                          </div>
+                        </motion.div>
+                        
+                        <motion.div 
+                          whileHover={{ scale: 1.02 }}
+                          className="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-100"
+                        >
+                          <div className="p-3 bg-blue-100 rounded-full mr-4">
+                            <FiCheck className="text-blue-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-800">Weekly Challenge</h4>
+                            <p className="text-sm text-gray-600">Completed 5 pickups in one week</p>
+                          </div>
+                        </motion.div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rewards Tab */}
+                {activeTab === 'rewards' && (
+                  <div className="p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-xl font-semibold text-gray-800">Available Rewards</h2>
+                      <div className="flex items-center bg-amber-50 px-4 py-2 rounded-full">
+                        <FiStar className="text-amber-500 mr-2" />
+                        <span className="font-medium">{user.points} points available</span>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {rewards.map((reward, index) => (
+                        <motion.div
+                          key={reward.id}
+                          initial="hidden"
+                          animate="visible"
+                          variants={cardVariants}
+                          transition={{ delay: index * 0.1 }}
+                          className={`border rounded-xl overflow-hidden ${reward.claimed ? 'border-gray-200 opacity-75' : 'border-green-200'}`}
+                        >
+                          <div className="h-40 bg-gradient-to-r from-green-50  flex items-center justify-center">
+                            <div className="text-5xl">🎁</div>
+                          </div>
+                          <div className="p-5">
+                            <div className="flex justify-between items-start mb-3">
+                              <h3 className={`font-bold text-lg ${reward.claimed ? 'text-gray-500' : 'text-gray-800'}`}>
+                                {reward.name}
+                              </h3>
+                              <div className="flex items-center bg-amber-100 px-2 py-1 rounded-full">
+                                <FiStar className="text-amber-500 mr-1" />
+                                <span className="text-sm font-medium">{reward.points}</span>
+                              </div>
+                            </div>
+                            <p className="text-gray-600 text-sm mb-4">{reward.description}</p>
+                            
+                            <motion.button
+                              whileHover={!reward.claimed && user.points >= reward.points ? { scale: 1.05 } : {}}
+                              whileTap={!reward.claimed && user.points >= reward.points ? { scale: 0.95 } : {}}
+                              onClick={() => handleClaimReward(reward.id)}
+                              disabled={reward.claimed || user.points < reward.points}
+                              className={`w-full py-2 rounded-lg text-sm font-medium ${
+                                reward.claimed
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : user.points >= reward.points
+                                    ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md hover:shadow-lg'
+                                    : 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                              }`}
+                            >
+                              {reward.claimed ? 'Claimed' : user.points >= reward.points ? 'Redeem Now' : 'Need More Points'}
+                            </motion.button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Inventory Tab */}
+                {activeTab === 'inventory' && (
+                  <div className="p-6">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-6">Your Claimed Items</h2>
+                    
+                    {user.inventory.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="text-5xl mb-4">📦</div>
+                        <h3 className="text-lg font-medium text-gray-700 mb-2">Your inventory is empty</h3>
+                        <p className="text-gray-500">Claim rewards from the Rewards tab to see them here</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {user.inventory.map((item, index) => (
+                          <motion.div
+                            key={item.id}
+                            initial="hidden"
+                            animate="visible"
+                            variants={cardVariants}
+                            transition={{ delay: index * 0.1 }}
+                            className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+                          >
+                            <div className="h-40 bg-gradient-to-r from-blue-50 to-cyan-50 flex items-center justify-center">
+                              <div className="text-5xl">🎁</div>
+                            </div>
+                            <div className="p-5">
+                              <div className="flex justify-between items-start mb-3">
+                                <h3 className="font-bold text-lg text-gray-800">
+                                  {item.name}
+                                </h3>
+                                <button className="text-gray-400 hover:text-red-500 transition-colors">
+                                  <FiTrash2 />
+                                </button>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-500">Claimed on {item.dateClaimed}</span>
+                                <button className="text-sm text-green-600 hover:text-green-700 font-medium">
+                                  View Details
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
+      </div>
 
-        {/* Profile Tab Content */}
-        {activeTab === 'profile' && (
-          <>
-            {/* Profile Header */}
-            <div className="flex flex-col md:flex-row items-center justify-between bg-white rounded-lg shadow p-6 mb-8">
-              <div className="flex items-center mb-4 md:mb-0">
-                <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mr-4 overflow-hidden">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-3xl">👤</span>
-                  )}
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-800">{user.name}</h1>
-                  <p className="text-gray-600">{user.email}</p>
-                  <p className="text-sm text-gray-500">Member since {user.joinDate}</p>
-                </div>
+      {/* Edit Profile Modal */}
+      <AnimatePresence>
+        {isEditing && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+            >
+              <div className="p-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Edit Profile</h2>
+                
+                <form onSubmit={handleEditSubmit}>
+                  <div className="space-y-4 mb-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={editForm.email}
+                        onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                      <input
+                        type="tel"
+                        value={editForm.phone}
+                        onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                      <input
+                        type="text"
+                        value={editForm.address}
+                        onChange={(e) => setEditForm({...editForm, address: e.target.value})}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div className="bg-green-50 px-4 py-2 rounded-lg">
-                <p className="text-sm text-green-800 font-medium">Level</p>
-                <p className="text-lg font-bold text-green-600">{user.level}</p>
-              </div>
-            </div>
-
-            {/* Stats Section */}
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Recycling Impact</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <StatCard
-                  title="Total Items Recycled"
-                  value={stats.totalItems}
-                  icon="🔄"
-                  color="bg-blue-100"
-                  textColor="text-blue-800"
-                />
-                <StatCard
-                  title="CO₂ Saved"
-                  value={`${stats.co2Saved} kg`}
-                  icon="🌱"
-                  color="bg-green-100"
-                  textColor="text-green-800"
-                />
-                <StatCard
-                  title="Eco Points"
-                  value={stats.points}
-                  icon="⭐"
-                  color="bg-yellow-100"
-                  textColor="text-yellow-800"
-                />
-              </div>
-
-              {/* Material Breakdown */}
-              <div className="mt-6 bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Material Breakdown</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <MaterialStat name="Plastic" value={stats.plastic} color="bg-blue-200" />
-                  <MaterialStat name="Paper" value={stats.paper} color="bg-amber-200" />
-                  <MaterialStat name="Glass" value={stats.glass} color="bg-emerald-200" />
-                  <MaterialStat name="Metal" value={stats.metal} color="bg-gray-300" />
-                </div>
-              </div>
-            </section>
-
-            {/* Badges Section */}
-            <section>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Badges</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                {badges.map((badge) => (
-                  <BadgeCard key={badge.id} badge={badge} />
-                ))}
-              </div>
-            </section>
-          </>
+            </motion.div>
+          </motion.div>
         )}
-
-        {/* Rewards Tab Content */}
-        {activeTab === 'rewards' && (
-          <section>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-800">Available Rewards</h2>
-              <div className="relative">
-                <select className="appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
-                  <option>Sort by: Points (Low to High)</option>
-                  <option>Sort by: Points (High to Low)</option>
-                  <option>Sort by: Newest</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                  <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {rewards.map((reward) => (
-                <RewardCard key={reward.id} reward={reward} userPoints={stats.points} />
-              ))}
-            </div>
-
-            {/* How it works */}
-            <section className="mt-12 bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">How Rewards Work</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="flex items-start">
-                  <div className="bg-green-100 p-3 rounded-full mr-4">
-                    <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-800 mb-1">Earn Points</h3>
-                    <p className="text-gray-600 text-sm">Recycle items at our centers to earn points based on material type and quantity.</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="bg-blue-100 p-3 rounded-full mr-4">
-                    <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-800 mb-1">Browse Rewards</h3>
-                    <p className="text-gray-600 text-sm">Choose from various eco-friendly products, services, and experiences.</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="bg-purple-100 p-3 rounded-full mr-4">
-                    <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-800 mb-1">Redeem & Enjoy</h3>
-                    <p className="text-gray-600 text-sm">Exchange your points for rewards and enjoy your eco-friendly perks!</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </section>
-        )}
-      </main>
+      </AnimatePresence>
     </div>
   );
-};
-
-// Component for stat cards
-const StatCard = ({ title, value, icon, color, textColor }: { title: string; value: string | number; icon: string; color: string; textColor: string }) => (
-  <div className={`${color} p-4 rounded-lg shadow`}>
-    <div className="flex items-center">
-      <span className="text-2xl mr-3">{icon}</span>
-      <div>
-        <p className="text-sm font-medium text-gray-600">{title}</p>
-        <p className={`text-2xl font-bold ${textColor}`}>{value}</p>
-      </div>
-    </div>
-  </div>
-);
-
-// Component for material stats
-const MaterialStat = ({ name, value, color }: { name: string; value: number; color: string }) => (
-  <div className="flex items-center">
-    <div className={`w-4 h-4 rounded-full ${color} mr-2`}></div>
-    <span className="text-gray-700 font-medium">{name}:</span>
-    <span className="ml-2 font-bold">{value}</span>
-  </div>
-);
-
-// Component for badge cards
-const BadgeCard = ({ badge }: { badge: Badge }) => (
-  <div className={`bg-white rounded-lg shadow overflow-hidden border-2 ${badge.earned ? 'border-yellow-400' : 'border-gray-200 opacity-60'}`}>
-    <div className="p-4">
-      <div className="text-4xl text-center mb-3">{badge.icon}</div>
-      <h3 className="font-bold text-center text-gray-800">{badge.name}</h3>
-      <p className="text-sm text-gray-600 text-center mt-1">{badge.description}</p>
-    </div>
-    <div className={`px-4 py-2 text-center text-sm font-medium ${badge.earned ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-500'}`}>
-      {badge.earned ? 'Earned' : 'Locked'}
-    </div>
-  </div>
-);
-
-// Component for reward cards
-const RewardCard = ({ reward, userPoints }: { reward: Reward; userPoints: number }) => {
-  const canClaim = userPoints >= reward.points && !reward.claimed;
-  
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow duration-300">
-      <div className="h-48 bg-gray-200 overflow-hidden">
-        {/* In a real app, you would use next/image for optimized images */}
-        <div className="w-full h-full flex items-center justify-center text-gray-400">
-          {reward.image ? (
-            <img src={reward.image} alt={reward.title} className="w-full h-full object-cover" />
-          ) : (
-            <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          )}
-        </div>
-      </div>
-      <div className="p-5">
-        {reward.partner && (
-          <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-2">
-            {reward.partner}
-          </span>
-        )}
-        <h3 className="font-bold text-lg text-gray-800 mb-1">{reward.title}</h3>
-        <p className="text-gray-600 text-sm mb-4">{reward.description}</p>
-        
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <span className="text-yellow-500 mr-1">⭐</span>
-            <span className="font-bold">{reward.points.toLocaleString()} pts</span>
-          </div>
-          
-          {reward.claimed ? (
-            <span className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full">
-              Claimed
-            </span>
-          ) : canClaim ? (
-            <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-              Redeem Now
-            </button>
-          ) : (
-            <span className="text-gray-500 text-sm">
-              Need {reward.points - userPoints} more pts
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default ProfileRewardPage;
+}
