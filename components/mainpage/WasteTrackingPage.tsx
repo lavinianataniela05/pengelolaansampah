@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { Gauge, Calendar, Package, Truck, Clock, CheckCircle, Leaf, Recycle, TrendingUp, Plus, Filter, Download, MapPin, User, Phone, X } from 'lucide-react'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 
 export default function WasteTracking() {
   const [showFilterModal, setShowFilterModal] = useState(false)
@@ -13,6 +13,8 @@ export default function WasteTracking() {
     dateRange: '',
     weightRange: ''
   })
+
+  const router = useRouter()
 
   const collectionHistory = [
     {
@@ -180,13 +182,9 @@ export default function WasteTracking() {
   }
 
   const filteredHistory = collectionHistory.filter(item => {
-    // Status filter
     if (filters.status && item.status !== filters.status) return false
-    
-    // Waste type filter
     if (filters.wasteType && item.wasteType !== filters.wasteType) return false
     
-    // Date range filter
     if (filters.dateRange) {
       const today = new Date()
       const itemDate = new Date(item.date)
@@ -198,7 +196,6 @@ export default function WasteTracking() {
       if (filters.dateRange === 'last90' && diffDays > 90) return false
     }
     
-    // Weight range filter
     if (filters.weightRange) {
       if (filters.weightRange === '0-5' && item.kilos > 5) return false
       if (filters.weightRange === '5-10' && (item.kilos <= 5 || item.kilos > 10)) return false
@@ -247,16 +244,16 @@ export default function WasteTracking() {
                   </span>
                 )}
               </motion.button>
-<motion.button
-  whileHover={{ scale: 1.02 }}
-  whileTap={{ scale: 0.98 }}
-  className="bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 flex items-center transition-all duration-200 shadow-md text-sm"
-  onClick={() => useRouter().push('/delivery-collection')}
->
-  <Plus className="w-4 h-4 mr-2" />
-  Schedule Pickup
-</motion.button>
               
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 flex items-center transition-all duration-200 shadow-md text-sm"
+                onClick={() => router.push('/delivery-collection')}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Schedule Pickup
+              </motion.button>
             </div>
           </div>
         </motion.div>
@@ -463,32 +460,40 @@ export default function WasteTracking() {
           </div>
         </motion.div>
 
-        {/* Filter Modal */}
+        {/* Enhanced Filter Modal */}
         {showFilterModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-xl shadow-xl w-full max-w-md"
+              className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden"
             >
-              <div className="p-5 border-b border-gray-200 flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">Filter Collections</h3>
+              <div className="p-5 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-green-50 to-green-100">
+                <div className="flex items-center">
+                  <Filter className="w-5 h-5 text-green-600 mr-2" />
+                  <h3 className="text-lg font-semibold text-gray-800">Filter Collections</h3>
+                </div>
                 <button 
                   onClick={() => setShowFilterModal(false)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
               
-              <div className="p-5 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <div className="p-5 space-y-5 max-h-[60vh] overflow-y-auto">
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <span className="bg-green-100 p-1 rounded mr-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    </span>
+                    Status
+                  </label>
                   <select
                     name="status"
                     value={filters.status}
                     onChange={handleFilterChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 text-gray-800"
                   >
                     {statusOptions.map(option => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -496,13 +501,18 @@ export default function WasteTracking() {
                   </select>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Waste Type</label>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <span className="bg-green-100 p-1 rounded mr-2">
+                      <Recycle className="w-4 h-4 text-green-600" />
+                    </span>
+                    Waste Type
+                  </label>
                   <select
                     name="wasteType"
                     value={filters.wasteType}
                     onChange={handleFilterChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 text-gray-800"
                   >
                     {wasteTypeOptions.map(option => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -510,13 +520,18 @@ export default function WasteTracking() {
                   </select>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <span className="bg-green-100 p-1 rounded mr-2">
+                      <Calendar className="w-4 h-4 text-green-600" />
+                    </span>
+                    Date Range
+                  </label>
                   <select
                     name="dateRange"
                     value={filters.dateRange}
                     onChange={handleFilterChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 text-gray-800"
                   >
                     {dateRangeOptions.map(option => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -524,13 +539,18 @@ export default function WasteTracking() {
                   </select>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Weight Range</label>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <span className="bg-green-100 p-1 rounded mr-2">
+                      <Gauge className="w-4 h-4 text-green-600" />
+                    </span>
+                    Weight Range
+                  </label>
                   <select
                     name="weightRange"
                     value={filters.weightRange}
                     onChange={handleFilterChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 text-gray-800"
                   >
                     {weightRangeOptions.map(option => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -539,26 +559,32 @@ export default function WasteTracking() {
                 </div>
               </div>
               
-              <div className="p-5 border-t border-gray-200 flex justify-between">
-                <button
+              <div className="p-5 border-t border-gray-200 bg-gray-50 flex justify-between">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={resetFilters}
-                  className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
+                  className="px-5 py-2.5 text-gray-700 hover:text-gray-900 font-medium rounded-lg border border-gray-300 hover:bg-white transition-all"
                 >
-                  Reset
-                </button>
+                  Reset All
+                </motion.button>
                 <div className="space-x-3">
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setShowFilterModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
+                    className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-white font-medium transition-all"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={applyFilters}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                    className="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-all shadow-md"
                   >
                     Apply Filters
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
