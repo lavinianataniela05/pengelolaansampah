@@ -1,18 +1,25 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Gauge, Calendar, Package, Truck, Clock, CheckCircle, Leaf, Recycle, TrendingUp, Plus, Filter, Download, MapPin, User, Phone } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { Gauge, Calendar, Package, Truck, Clock, CheckCircle, Leaf, Recycle, TrendingUp, Plus, Filter, Download, MapPin, User, Phone, X } from 'lucide-react'
+import { useRouter } from 'next/router'
 
 export default function WasteTracking() {
-  const router = useRouter()
-  
+  const [showFilterModal, setShowFilterModal] = useState(false)
+  const [filters, setFilters] = useState({
+    status: '',
+    wasteType: '',
+    dateRange: '',
+    weightRange: ''
+  })
+
   const collectionHistory = [
     {
       id: 1,
       pickupTime: "09:30 AM",
       date: "2023-11-15",
-      kilos: "12.5 kg",
+      kilos: 12.5,
       wasteType: "Plastic Bottles & Containers",
       address: "123 Green Street, Eco District, Jakarta 12345",
       status: "Completed",
@@ -26,7 +33,7 @@ export default function WasteTracking() {
       id: 2,
       pickupTime: "02:15 PM",
       date: "2023-11-14",
-      kilos: "8.2 kg",
+      kilos: 8.2,
       wasteType: "Paper & Cardboard",
       address: "123 Green Street, Eco District, Jakarta 12345",
       status: "In Transit",
@@ -40,7 +47,7 @@ export default function WasteTracking() {
       id: 3,
       pickupTime: "11:45 AM",
       date: "2023-11-12",
-      kilos: "5.7 kg",
+      kilos: 5.7,
       wasteType: "Electronic Waste",
       address: "123 Green Street, Eco District, Jakarta 12345",
       status: "Processing",
@@ -54,7 +61,7 @@ export default function WasteTracking() {
       id: 4,
       pickupTime: "08:00 AM",
       date: "2023-11-10",
-      kilos: "15.3 kg",
+      kilos: 15.3,
       wasteType: "Organic Waste",
       address: "123 Green Street, Eco District, Jakarta 12345",
       status: "Composted",
@@ -68,7 +75,7 @@ export default function WasteTracking() {
       id: 5,
       pickupTime: "01:30 PM",
       date: "2023-11-08",
-      kilos: "9.8 kg",
+      kilos: 9.8,
       wasteType: "Mixed Recyclables",
       address: "123 Green Street, Eco District, Jakarta 12345",
       status: "Completed", 
@@ -119,19 +126,90 @@ export default function WasteTracking() {
     }
   ]
 
-  const handleFilterClick = () => {
-    // Add your filter logic here
-    console.log("Filter button clicked")
-    // Or open a filter modal/dialog
-    // setShowFilterModal(true)
+  const statusOptions = [
+    { value: '', label: 'All Statuses' },
+    { value: 'Completed', label: 'Completed' },
+    { value: 'In Transit', label: 'In Transit' },
+    { value: 'Processing', label: 'Processing' },
+    { value: 'Composted', label: 'Composted' }
+  ]
+
+  const wasteTypeOptions = [
+    { value: '', label: 'All Types' },
+    { value: 'Plastic Bottles & Containers', label: 'Plastic' },
+    { value: 'Paper & Cardboard', label: 'Paper' },
+    { value: 'Electronic Waste', label: 'E-Waste' },
+    { value: 'Organic Waste', label: 'Organic' },
+    { value: 'Mixed Recyclables', label: 'Mixed' }
+  ]
+
+  const dateRangeOptions = [
+    { value: '', label: 'All Dates' },
+    { value: 'last7', label: 'Last 7 Days' },
+    { value: 'last30', label: 'Last 30 Days' },
+    { value: 'last90', label: 'Last 90 Days' }
+  ]
+
+  const weightRangeOptions = [
+    { value: '', label: 'All Weights' },
+    { value: '0-5', label: '0-5 kg' },
+    { value: '5-10', label: '5-10 kg' },
+    { value: '10-15', label: '10-15 kg' },
+    { value: '15+', label: '15+ kg' }
+  ]
+
+  const handleFilterChange = (e: { target: { name: any; value: any } }) => {
+    const { name, value } = e.target
+    setFilters(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
 
-  const handleSchedulePickup = () => {
-    // Add your schedule pickup logic here
-    console.log("Schedule Pickup button clicked")
-    // Or navigate to schedule pickup page
-    // router.push('/schedule-pickup')
+  const resetFilters = () => {
+    setFilters({
+      status: '',
+      wasteType: '',
+      dateRange: '',
+      weightRange: ''
+    })
   }
+
+  const applyFilters = () => {
+    setShowFilterModal(false)
+  }
+
+  const filteredHistory = collectionHistory.filter(item => {
+    // Status filter
+    if (filters.status && item.status !== filters.status) return false
+    
+    // Waste type filter
+    if (filters.wasteType && item.wasteType !== filters.wasteType) return false
+    
+    // Date range filter
+    if (filters.dateRange) {
+      const today = new Date()
+      const itemDate = new Date(item.date)
+      const diffTime = today.getTime() - itemDate.getTime()
+      const diffDays = diffTime / (1000 * 60 * 60 * 24)
+      
+      if (filters.dateRange === 'last7' && diffDays > 7) return false
+      if (filters.dateRange === 'last30' && diffDays > 30) return false
+      if (filters.dateRange === 'last90' && diffDays > 90) return false
+    }
+    
+    // Weight range filter
+    if (filters.weightRange) {
+      if (filters.weightRange === '0-5' && item.kilos > 5) return false
+      if (filters.weightRange === '5-10' && (item.kilos <= 5 || item.kilos > 10)) return false
+      if (filters.weightRange === '10-15' && (item.kilos <= 10 || item.kilos > 15)) return false
+      if (filters.weightRange === '15+' && item.kilos <= 15) return false
+    }
+    
+    return true
+  })
+
+  const activeFilterCount = Object.values(filters).filter(val => val !== '').length
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-25 to-green-50" style={{ background: 'linear-gradient(135deg, #fafff9 0%, #f0fdf4 100%)' }}>
@@ -158,26 +236,31 @@ export default function WasteTracking() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={handleFilterClick}
-                className="bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 flex items-center transition-all duration-200 shadow-sm text-sm"
+                onClick={() => setShowFilterModal(true)}
+                className="bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 flex items-center transition-all duration-200 shadow-sm text-sm relative"
               >
                 <Filter className="w-4 h-4 mr-2" />
                 Filter
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
               </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleSchedulePickup}
-                className="bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 flex items-center transition-all duration-200 shadow-md text-sm"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Schedule Pickup
-              </motion.button>
+<motion.button
+  whileHover={{ scale: 1.02 }}
+  whileTap={{ scale: 0.98 }}
+  className="bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 flex items-center transition-all duration-200 shadow-md text-sm"
+  onClick={() => useRouter().push('/delivery-collection')}
+>
+  <Plus className="w-4 h-4 mr-2" />
+  Schedule Pickup
+</motion.button>
+              
             </div>
           </div>
         </motion.div>
 
-        {/* Rest of your component remains the same */}
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
           {stats.map((stat, index) => (
@@ -250,7 +333,7 @@ export default function WasteTracking() {
                     <Truck className="w-5 h-5 mr-2 text-green-600" />
                     Collection History
                   </h2>
-                  <p className="text-sm text-gray-600 mt-1">Detailed pickup records and tracking information</p>
+                  <p className="text-sm text-gray-600 mt-1">Showing {filteredHistory.length} of {collectionHistory.length} collections</p>
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-gray-500">Total Collections</div>
@@ -259,88 +342,100 @@ export default function WasteTracking() {
               </div>
             </div>
             
-            <div className="divide-y divide-gray-100">
-              {collectionHistory.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 + 0.5 }}
-                  whileHover={{ 
-                    backgroundColor: "rgba(240, 253, 244, 0.5)",
-                    transition: { type: "spring", stiffness: 300 }
-                  }}
-                  className="p-5 transition-all duration-300"
+            {filteredHistory.length === 0 ? (
+              <div className="p-10 text-center">
+                <div className="text-gray-400 mb-4">No collections match your filters</div>
+                <button 
+                  onClick={resetFilters}
+                  className="text-green-600 hover:text-green-800 font-medium text-sm"
                 >
-                  <div className="flex flex-col">
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
-                      <div className="flex items-start gap-3">
-                        <div className="bg-green-100 p-2 rounded-lg mt-1">
-                          <Package className="w-4 h-4 text-green-600" />
+                  Clear all filters
+                </button>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {filteredHistory.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 + 0.5 }}
+                    whileHover={{ 
+                      backgroundColor: "rgba(240, 253, 244, 0.5)",
+                      transition: { type: "spring", stiffness: 300 }
+                    }}
+                    className="p-5 transition-all duration-300"
+                  >
+                    <div className="flex flex-col">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+                        <div className="flex items-start gap-3">
+                          <div className="bg-green-100 p-2 rounded-lg mt-1">
+                            <Package className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-base font-semibold text-gray-800">{item.wasteType}</h3>
+                            <div className="flex items-center text-xs text-gray-600 mt-1">
+                              <Clock className="w-3 h-3 mr-1" />
+                              {item.date} at {item.pickupTime}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-base font-semibold text-gray-800">{item.wasteType}</h3>
-                          <div className="flex items-center text-xs text-gray-600 mt-1">
-                            <Clock className="w-3 h-3 mr-1" />
-                            {item.date} at {item.pickupTime}
+                        <div className="text-right">
+                          <div className="text-xl font-bold text-gray-800">{item.kilos} kg</div>
+                          <div className="text-xs text-gray-500">Weight</div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <div className="flex items-center mb-1">
+                            <MapPin className="w-4 h-4 text-gray-500 mr-2" />
+                            <span className="text-xs font-medium text-gray-700">Pickup Address</span>
+                          </div>
+                          <p className="text-xs text-gray-600">{item.address}</p>
+                        </div>
+                        
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <div className="flex items-center mb-1">
+                            <User className="w-4 h-4 text-gray-500 mr-2" />
+                            <span className="text-xs font-medium text-gray-700">Collector</span>
+                          </div>
+                          <p className="text-xs text-gray-600">{item.collector}</p>
+                          <div className="flex items-center mt-1">
+                            <Phone className="w-3 h-3 text-gray-400 mr-1" />
+                            <span className="text-xs text-gray-500">{item.phone}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-xl font-bold text-gray-800">{item.kilos}</div>
-                        <div className="text-xs text-gray-500">Weight</div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <div className="flex items-center mb-1">
-                          <MapPin className="w-4 h-4 text-gray-500 mr-2" />
-                          <span className="text-xs font-medium text-gray-700">Pickup Address</span>
-                        </div>
-                        <p className="text-xs text-gray-600">{item.address}</p>
-                      </div>
                       
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <div className="flex items-center mb-1">
-                          <User className="w-4 h-4 text-gray-500 mr-2" />
-                          <span className="text-xs font-medium text-gray-700">Collector</span>
-                        </div>
-                        <p className="text-xs text-gray-600">{item.collector}</p>
-                        <div className="flex items-center mt-1">
-                          <Phone className="w-3 h-3 text-gray-400 mr-1" />
-                          <span className="text-xs text-gray-500">{item.phone}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className={`px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full border ${item.statusColor}`}>
-                          <span className="mr-1.5">{item.icon}</span>
-                          {item.status}
-                        </span>
-                        {item.notes && (
-                          <span className="text-xs text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded-full">
-                            {item.notes}
+                      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`px-3 py-1.5 inline-flex items-center text-xs font-medium rounded-full border ${item.statusColor}`}>
+                            <span className="mr-1.5">{item.icon}</span>
+                            {item.status}
                           </span>
-                        )}
+                          {item.notes && (
+                            <span className="text-xs text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded-full">
+                              {item.notes}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <motion.button
+                          whileHover={{ x: 3 }}
+                          className="text-green-600 hover:text-green-800 font-medium text-xs flex items-center transition-colors self-end xs:self-auto"
+                        >
+                          View Details
+                          <svg className="w-3 h-3 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </motion.button>
                       </div>
-                      
-                      <motion.button
-                        whileHover={{ x: 3 }}
-                        className="text-green-600 hover:text-green-800 font-medium text-xs flex items-center transition-colors self-end xs:self-auto"
-                      >
-                        View Details
-                        <svg className="w-3 h-3 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </motion.button>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </motion.div>
         </div>
 
@@ -368,6 +463,107 @@ export default function WasteTracking() {
           </div>
         </motion.div>
 
+        {/* Filter Modal */}
+        {showFilterModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-xl shadow-xl w-full max-w-md"
+            >
+              <div className="p-5 border-b border-gray-200 flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-800">Filter Collections</h3>
+                <button 
+                  onClick={() => setShowFilterModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    name="status"
+                    value={filters.status}
+                    onChange={handleFilterChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    {statusOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Waste Type</label>
+                  <select
+                    name="wasteType"
+                    value={filters.wasteType}
+                    onChange={handleFilterChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    {wasteTypeOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                  <select
+                    name="dateRange"
+                    value={filters.dateRange}
+                    onChange={handleFilterChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    {dateRangeOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Weight Range</label>
+                  <select
+                    name="weightRange"
+                    value={filters.weightRange}
+                    onChange={handleFilterChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    {weightRangeOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              <div className="p-5 border-t border-gray-200 flex justify-between">
+                <button
+                  onClick={resetFilters}
+                  className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
+                >
+                  Reset
+                </button>
+                <div className="space-x-3">
+                  <button
+                    onClick={() => setShowFilterModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={applyFilters}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                  >
+                    Apply Filters
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     </div>
   )
