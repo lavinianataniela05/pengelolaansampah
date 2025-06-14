@@ -210,7 +210,7 @@ export default function Sidebar() {
   
   const handleLogout = () => {
     // Add logout logic here
-    router.push('/login');
+    router.push('/logout');
   }
   
   // Animation variants
