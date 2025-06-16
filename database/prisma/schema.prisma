@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Customer {
+  id           Int           @id @default(autoincrement())
+  nama         String
+  email        String        @unique
+  noTelp       String
+  password     String
+  role         Role          @default(USER)
+  reservations Reservation[]
+}
+
+model Reservation {
+  id              Int       @id @default(autoincrement())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  isCancelled     Boolean   @default(false)
+  status          String
+  reservationDate DateTime
+  reservationTime DateTime
+  cancelledAt     DateTime?
+  customerId      Int
+  orders          Order[]
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  tables          Table[]   @relation("ReservationToTable")
+}
+
+model Table {
+  id           Int           @id @default(autoincrement())
+  capacity     Int
+  status       String
+  reservations Reservation[] @relation("ReservationToTable")
+}
+
+model Staff {
+  id       Int     @id @default(autoincrement())
+  name     String
+  role     Role    @default(ADMIN)
+  email    String  @unique
+  password String
+  orders   Order[]
+}
+
+model Order {
+  id            Int         @id @default(autoincrement())
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  staffId       Int
+  reservationId Int
+  menuOrders    MenuOrder[]
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  staff         Staff       @relation(fields: [staffId], references: [id])
+}
+
+model Menu {
+  id         Int         @id @default(autoincrement())
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  price      Float
+  itemType   String
+  itemName   String      @db.VarChar(255)
+  menuOrders MenuOrder[]
+}
+
+model MenuOrder {
+  orderId   Int
+  menuId    Int
+  quantity  Int
+  createdAt DateTime @default(now())
+  menu      Menu     @relation(fields: [menuId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id])
+
+  @@id([orderId, menuId])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
