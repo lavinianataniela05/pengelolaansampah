@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import { Leaf, LeafyGreen } from 'lucide-react'
 
 export default function Home() {
   const router = useRouter()
@@ -10,65 +11,120 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.push('/register')
-    }, 2000)
+    }, 3000)
 
     return () => clearTimeout(timer)
   }, [router])
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-green-50 to-green-100 p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 p-4">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="text-center"
+        className="text-center max-w-md"
       >
-        <div className="mb-6">
+        <div className="mb-8">
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+            animate={{ 
+              rotate: [-15, 15, -15],
+              y: [0, -10, 0]
+            }}
+            transition={{ 
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
             className="inline-block"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-16 h-16 text-green-600"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <LeafyGreen className="w-20 h-20 text-emerald-600 mx-auto" strokeWidth={1} />
           </motion.div>
         </div>
 
-        <h1 className="text-5xl font-bold text-green-800 mb-4">
-          Welcome to <span className="text-green-600">EcoManage</span>
+        <h1 className="text-4xl font-bold text-emerald-800 mb-4">
+          Welcome to <span className="text-emerald-600">EcoManage</span>
         </h1>
         
-        <p className="text-lg text-green-700 mb-8">
+        <p className="text-lg text-emerald-700 mb-8">
           Sustainable solutions for a greener tomorrow
         </p>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center space-x-2">
           <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="h-2 w-2 bg-green-500 rounded-full mx-1"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              backgroundColor: ["#10B981", "#059669", "#10B981"]
+            }}
+            transition={{ 
+              duration: 1.5, 
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="h-3 w-3 bg-emerald-500 rounded-full"
           />
           <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
-            className="h-2 w-2 bg-green-500 rounded-full mx-1"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              backgroundColor: ["#10B981", "#059669", "#10B981"]
+            }}
+            transition={{ 
+              duration: 1.5, 
+              repeat: Infinity,
+              delay: 0.3,
+              ease: "easeInOut"
+            }}
+            className="h-3 w-3 bg-emerald-500 rounded-full"
           />
           <motion.div
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
-            className="h-2 w-2 bg-green-500 rounded-full mx-1"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              backgroundColor: ["#10B981", "#059669", "#10B981"]
+            }}
+            transition={{ 
+              duration: 1.5, 
+              repeat: Infinity,
+              delay: 0.6,
+              ease: "easeInOut"
+            }}
+            className="h-3 w-3 bg-emerald-500 rounded-full"
           />
         </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="mt-12 text-emerald-600 text-sm"
+        >
+          <p>Redirecting to registration...</p>
+          <motion.div
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 2, ease: "linear" }}
+            className="h-1 bg-emerald-200 rounded-full mt-2"
+          >
+            <motion.div 
+              className="h-full bg-emerald-500 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: "100%" }}
+              transition={{ duration: 3, ease: "linear" }}
+            />
+          </motion.div>
+        </motion.div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5 }}
+        className="absolute bottom-8 left-0 right-0 text-center"
+      >
+        <button 
+          onClick={() => router.push('/login')}
+          className="text-emerald-600 hover:text-emerald-800 font-medium text-sm"
+        >
+          Already have an account? Sign in
+        </button>
       </motion.div>
     </div>
   )

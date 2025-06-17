@@ -33,12 +33,12 @@ type Activity = {
 export default function ProfilePage() {
   // User data state
   const [user, setUser] = useState({
-    name: "Alex Johnson",
-    email: "alex.johnson@example.com",
-    phone: "+1 (234) 567-8900",
-    address: "123 Green Street, Eco City, EC 12345",
+    name: "Lavinia Nataniela Novyandi",
+    email: "lavinia.nataniela@gmail.com",
+    phone: "+62 812-3456-7890",
+    address: "JL. Merdeka No. 123, Jakarta, Indonesia",
     memberSince: "Jan 2023",
-    points: 2500,
+    points: 1250,
     level: "Eco Champion",
     completedPickups: 24,
     scheduledPickups: 3,
